@@ -12,7 +12,7 @@ import {
 import { getConfessionCount, pushConfession } from "../../Database";
 
 export const slash: Slash = {
-  name: "Meowfession",
+  name: "meowfession",
   description: "Create meowfession",
   type: ApplicationCommandType.ChatInput,
   options: [
