@@ -6,8 +6,8 @@ import {
   ButtonStyle,
   ActionRowBuilder,
   ChannelType,
-  TextBasedChannel,
-  GuildTextBasedChannel,
+  TextChannel,
+  DMChannel,
 } from "discord.js";
 import { Event } from "../interfaces";
 import { getConfessionCount, pushConfession } from "../Database";
@@ -26,8 +26,13 @@ export const event: Event = {
     const isInGuild = await guild.members
       .fetch(message.author.id)
       .catch(() => null);
+
+    // If user is not in guild
     if (!isInGuild || isInGuild instanceof Collection) {
-      if (message.channel.isTextBased()) {
+      if (
+        message.channel.type === ChannelType.GuildText ||
+        message.channel.type === ChannelType.DM
+      ) {
         await message.channel.send("You are not in the server!");
       }
       return;
@@ -35,6 +40,7 @@ export const event: Event = {
 
     // Handle DMs for confessions
     if (message.channel.type === ChannelType.DM) {
+      const dmChannel = message.channel as DMChannel;
       const confession = message.content.trim();
       if (!confession) return;
 
@@ -71,8 +77,10 @@ export const event: Event = {
         process.env.REVIEW_CONFESSION_CHANNEL || ""
       );
 
-      if (reviewChannel?.type === ChannelType.GuildText) {
-        const msg = await reviewChannel.send({
+      if (reviewChannel && reviewChannel.type === ChannelType.GuildText) {
+        const textChannel = reviewChannel as TextChannel;
+
+        const msg = await textChannel.send({
           embeds: [embed],
           components: [actionRow],
         });
@@ -90,11 +98,9 @@ export const event: Event = {
           threadID: null,
         });
 
-        if (message.channel.isTextBased()) {
-          await message.channel.send({
-            content: `Meowfession #${cfsCount} is pending approval!`,
-          });
-        }
+        await dmChannel.send({
+          content: `Meowfession #${cfsCount} is pending approval!`,
+        });
       }
     }
 
